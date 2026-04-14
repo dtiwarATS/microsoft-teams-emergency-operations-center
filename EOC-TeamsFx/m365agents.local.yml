@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://aka.ms/teams-toolkit/v1.8/yaml.schema.json
+# Visit https://aka.ms/teamsfx-v5.0-guide for details on this file
+version: v1.8
+
+environmentFolderPath: ./env
+
+provision:
+  - uses: aadApp/create
+    with:
+      name: EOC-local
+      generateClientSecret: true
+      signInAudience: AzureADMyOrg
+    writeToEnvironmentFile:
+      clientId: AAD_APP_CLIENT_ID
+      clientSecret: SECRET_AAD_APP_CLIENT_SECRET
+      objectId: AAD_APP_OBJECT_ID
+      tenantId: AAD_APP_TENANT_ID
+      authority: AAD_APP_OAUTH_AUTHORITY
+      authorityHost: AAD_APP_OAUTH_AUTHORITY_HOST
+
+  - uses: aadApp/update
+    with:
+      manifestPath: ./appPackage/aad.manifest.json
+      outputFilePath: ./build/aad.manifest.local.json
+
+  - uses: teamsApp/create
+    with:
+      name: EOC-local
+    writeToEnvironmentFile:
+      teamsAppId: TEAMS_APP_ID
+
+  - uses: teamsApp/zipAppPackage
+    with:
+      manifestPath: ./appPackage/manifest.json
+      outputZipPath: ./appPackage/build/appPackage.local.zip
+      outputFolder: ./appPackage/build
+
+  - uses: teamsApp/update
+    with:
+      appPackagePath: ./appPackage/build/appPackage.local.zip
+
+deploy:
+  - uses: file/createOrUpdateEnvironmentFile
+    with:
+      target: ./tabs/.env.local
+      envs:
+        BROWSER: none
+        HTTPS: "true"
+        PORT: "53000"
+        REACT_APP_CLIENT_ID: ${{AAD_APP_CLIENT_ID}}
+        REACT_APP_START_LOGIN_PAGE_URL: ${{TAB_ENDPOINT}}/auth-start.html
+        REACT_APP_TEAMSFX_ENDPOINT: ${{TAB_ENDPOINT}}

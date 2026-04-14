@@ -10,3 +10,8 @@ build
 .fx/configs/config.local.json
 .fx/states/state.local.json
 .backup
+
+# M365 Agents Toolkit - never commit user-specific or secret env files
+env/.env.*.user
+env/.env.local
+tabs/.env.teamsfx.local

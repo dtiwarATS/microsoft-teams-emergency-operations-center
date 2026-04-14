@@ -336,25 +336,42 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
             scope: graphConfig.scope
         };
 
-        const credential = this.credential;
-        await credential.login(scope);
-        const graph = this.createMicrosoftGraphClient(credential, scope); // create graph object
-        console.log(constants.infoLogPrefix + "graph ", graph);
+        try {
+            const credential = this.credential;
+            await credential.login(scope);
 
-        const profile = await this.dataService.getGraphData(graphConfig.meGraphEndpoint, graph); // get user profile to validate the API
-
-        // validate if the above API call is returning result
-        if (!!profile) {
-            this.setState({ showLoginPage: false, graph: graph })
-
-            // call method to get the tenant details
-            if (!this.state.showLoginPage) {
-                await this.getTenantAndSiteDetails();
-                await this.getCurrentUserDetails();
+            // Ensure an access token is available before issuing Graph calls.
+            const token = await credential.getToken(scope);
+            if (!token?.token) {
+                throw new Error("Token unavailable after login.");
             }
-        }
-        else {
-            this.setState({ showLoginPage: true })
+
+            const graph = this.createMicrosoftGraphClient(credential, scope); // create graph object
+            console.log(constants.infoLogPrefix + "graph ", graph);
+
+            const profile = await this.dataService.getGraphData(graphConfig.meGraphEndpoint, graph); // get user profile to validate the API
+
+            // validate if the above API call is returning result
+            if (!!profile) {
+                this.setState({ showLoginPage: false, graph: graph })
+
+                // call method to get the tenant details
+                if (!this.state.showLoginPage) {
+                    await this.getTenantAndSiteDetails();
+                    await this.getCurrentUserDetails();
+                }
+            }
+            else {
+                this.setState({ showLoginPage: true })
+            }
+        } catch (error: any) {
+            console.error(
+                constants.errorLogPrefix + "_EOCHome_LoginClick \n",
+                JSON.stringify(error)
+            );
+            // Keep user on login state and avoid unhandled promise crashes.
+            this.setState({ showLoginPage: true });
+            alert(localeStrings.genericErrorMessage);
         }
     }
 
@@ -754,6 +771,19 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
                         {this.state.showLoginPage &&
                             <div className='loginButton'>
                                 <Button primary content={localeStrings.btnLogin} disabled={!this.state.showLoginPage} onClick={this.loginClick} />
+                            </div>
+                        }
+                        {!this.state.showLoginPage && this.state.siteId === "" &&
+                            <div className="container mt-3">
+                                <MessageBar
+                                    messageBarType={MessageBarType.warning}
+                                    isMultiline={true}
+                                    className="message-bar"
+                                    role="alert"
+                                    aria-live="polite"
+                                >
+                                    SharePoint site configuration is missing. Complete TEOC SharePoint deployment to load incidents and dashboard data.
+                                </MessageBar>
                             </div>
                         }
                         {!this.state.showLoginPage && this.state.siteId !== "" &&

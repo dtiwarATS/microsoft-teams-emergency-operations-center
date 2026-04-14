@@ -2,45 +2,118 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Pre Debug Check",
+            "label": "Start Teams App Locally",
             "dependsOn": [
-                "dependency check",
-                "prepare dev env"
+                "Validate prerequisites",
+                "Start local tunnel",
+                "Provision",
+                "Deploy",
+                "Start application"
             ],
             "dependsOrder": "sequence"
         },
         {
-            "label": "dependency check",
+            "label": "Validate prerequisites",
+            "type": "teamsfx",
+            "command": "debug-check-prerequisites",
+            "presentation": {
+                "reveal": "never",
+                "panel": "dedicated"
+            },
+            "args": {
+                "prerequisites": [
+                    "nodejs",
+                    "m365Account",
+                    "portOccupancy"
+                ],
+                "portOccupancy": [53000]
+            }
+        },
+        {
+            "label": "Start local tunnel",
+            "type": "teamsfx",
+            "command": "debug-start-local-tunnel",
+            "isBackground": true,
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
+            },
+            "args": {
+                "type": "dev-tunnel",
+                "ports": [
+                    {
+                        "portNumber": 53000,
+                        "protocol": "https",
+                        "access": "public",
+                        "writeToEnvironmentFile": {
+                            "endpoint": "TAB_ENDPOINT",
+                            "domain": "TAB_DOMAIN"
+                        }
+                    }
+                ],
+                "env": "local"
+            },
+            "problemMatcher": "$teamsfx-local-tunnel-watch"
+        },
+        {
+            "label": "Provision",
+            "type": "teamsfx",
+            "command": "provision",
+            "presentation": {
+                "reveal": "never",
+                "panel": "dedicated"
+            },
+            "args": {
+                "env": "local"
+            }
+        },
+        {
+            "label": "Deploy",
+            "type": "teamsfx",
+            "command": "deploy",
+            "presentation": {
+                "reveal": "never",
+                "panel": "dedicated"
+            },
+            "args": {
+                "env": "local"
+            }
+        },
+        {
+            "label": "Start application",
+            "dependsOn": ["Start frontend"]
+        },
+        {
+            "label": "Start frontend",
             "type": "shell",
-            "command": "echo ${command:fx-extension.validate-dependencies}"
-        },
-        {
-            "label": "prepare dev env",
-            "dependsOn": [
-                "prepare local environment",
-                "frontend npm install"
-            ],
-            "dependsOrder": "parallel"
-        },
-        {
-            "label": "prepare local environment",
-            "type": "shell",
-            "command": "echo ${command:fx-extension.pre-debug-check}"
-        },
-        {
-            "label": "Start Frontend",
-            "dependsOn": [
-                "teamsfx: frontend start",
-                "teamsfx: auth start"
-            ],
-            "dependsOrder": "parallel"
-        },
-        {
-            "label": "frontend npm install",
-            "type": "shell",
-            "command": "npm install",
+            "command": "npm run start",
+            "isBackground": true,
             "options": {
-                "cwd": "${workspaceFolder}/tabs"
+                "cwd": "${workspaceFolder}/tabs",
+                "env": {
+                    "BROWSER": "none",
+                    "HTTPS": "true",
+                    "PORT": "53000"
+                }
+            },
+            "problemMatcher": {
+                "pattern": [
+                    {
+                        "regexp": "^.*$",
+                        "file": 0,
+                        "location": 1,
+                        "message": 2
+                    }
+                ],
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": "Compiling",
+                    "endsPattern": "Compiled successfully|Failed to compile"
+                }
+            },
+            "presentation": {
+                "reveal": "silent",
+                "panel": "dedicated"
             }
         }
     ]

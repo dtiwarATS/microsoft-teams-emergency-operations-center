@@ -728,7 +728,8 @@ div[class="incident-details"] {
             label[class="message-label"]::after,
             label[class^="fui-Label"]::after,
             label[class="severity-label"]::after,
-            label[class="lead-people-picker"]::after {
+            label[class="lead-people-picker"]::after,
+            label[class="location-optional-label"]::after {
                 content: "";
             }
 

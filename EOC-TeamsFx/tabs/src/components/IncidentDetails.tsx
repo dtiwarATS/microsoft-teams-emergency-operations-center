@@ -2065,9 +2065,6 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
             user.displayName.trim() !== "" && user.email.trim() !== "")).length === 0) {
             inputValidationObj.guestUsersHasError = true;
         }
-        if (this.state.selectedLocation === "" || this.state.selectedLocation === undefined || this.state.selectedLocation === null) {
-            inputValidationObj.incidentLocationHasError = true;
-        }
         const guestUsers = incidentInfo.guestUsers;
         if (this.state.toggleGuestUsers) {
             guestUsers?.forEach((user: IGuestUsers, idx: number) => {
@@ -2082,7 +2079,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
 
         if (inputValidationObj.incidentNameHasError || inputValidationObj.incidentTypeHasError ||
             inputValidationObj.incidentStartDateTimeHasError || inputValidationObj.incidentStatusHasError || inputValidationObj.incidentDescriptionHasError ||
-            inputValidationObj.incidentCommandarHasError || inputValidationObj.incidentLocationHasError || inputValidationObj.incidentReasonForUpdateHasError ||
+            inputValidationObj.incidentCommandarHasError || inputValidationObj.incidentReasonForUpdateHasError ||
             inputValidationObj.cloudStorageLinkHasError || inputValidationObj.guestUsersHasError ||
             (incidentInfo.guestUsers?.filter((user) =>
                 (user.hasDisplayNameValidationError || user.hasEmailValidationError)).length > 0)) {
@@ -2114,8 +2111,6 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
             const shadow = this.incidentCommandar.current?.shadowRoot;
             let childInput: HTMLElement = shadow.getElementById("people-picker-input");
             childInput.focus();
-        } else if (inputValidationObj.incidentLocationHasError) {
-            this.incidentLocation.current?.focus();
         } else if (inputValidationObj.incidentDescriptionHasError) {
             this.incidentDescription.current?.focus();
         }
@@ -4368,6 +4363,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                     selectedLocation: location,
                     incDetailsItem: incidentInfo
                 });
+                return;
             }
             incidentInfo.location = "";
             this.setState({
@@ -4635,7 +4631,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                                         </Col>
                                         <Col xs={12} sm={12} md={6} lg={6} xl={6}>
                                             <div className="incident-grid-item">
-                                                <label className="FormInput-label">{this.props.localeStrings.fieldLocation}</label>
+                                                <label className="location-optional-label">{this.props.localeStrings.fieldLocation}</label>
                                                 <TeamsFxContext.Consumer>
                                                     {(value) =>
                                                         <LocationPicker
@@ -4650,9 +4646,6 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                                                         />
                                                     }
                                                 </TeamsFxContext.Consumer>
-                                                {this.state.inputValidation.incidentLocationHasError && (
-                                                    <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.locationRequired}</label>
-                                                )}
                                                 {this.state.inputRegexValidation.incidentLocationHasError && (
                                                     <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.locationRegex}</label>
                                                 )}
